@@ -62,3 +62,66 @@ persona_prompt = st.sidebar.text_area(
 # 選擇要使用的模型
 model_name = st.sidebar.selectbox(
     "選擇模型",
+    ("gemini-1.5-flash-latest", "gemini-1.5-pro-latest")
+)
+
+
+# --- 3. 主應用程式介面 ---
+st.title("🤖 AI 角色對話產生器")
+st.caption("請在左側側邊欄設定您的 API Key 與 AI 角色特性，然後開始對話！")
+
+
+# --- 4. 初始化模型與對話 ---
+chat = None
+if not api_key:
+    st.error("⚠️ 請在左側設定您的 Google API Key 以開始對話。")
+elif not persona_prompt.strip():
+    st.error("⚠️ 角色的特性設定不能為空！")
+else:
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(
+            model_name=model_name,
+            system_instruction=persona_prompt
+        )
+        chat = model.start_chat(history=[])
+        st.success("模型已成功載入！可以開始對話了。")
+    except Exception as e:
+        st.error(f"模型或 API Key 載入失敗，請檢查。錯誤訊息：{e}")
+
+
+# --- 5. 對話歷史記錄管理 ---
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# 顯示過去的對話紀錄
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+
+# --- 6. 處理使用者輸入與模型互動 ---
+if prompt := st.chat_input("您想對 AI 說些什麼？"):
+    if chat:
+        # 將使用者的訊息存檔並顯示
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        # 顯示 AI 正在思考的提示，並準備接收回覆
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            message_placeholder.markdown("思考中...✍️")
+            try:
+                # 傳送訊息給模型
+                response = chat.send_message(prompt)
+                full_response = response.text
+                message_placeholder.markdown(full_response)
+            except Exception as e:
+                full_response = f"發生錯誤：{e}"
+                message_placeholder.error(full_response)
+        
+        # 將 AI 的完整回覆存檔
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
+    else:
+        st.warning("請先完成左側的設定才能開始對話。")
