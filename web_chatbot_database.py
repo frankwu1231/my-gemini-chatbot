@@ -170,4 +170,41 @@ if camera_photo:
 elif uploaded_image:
     st.session_state.image_data = Image.open(uploaded_image)
 if st.session_state.image_data:
-    st.image(st.session_state.image_data, caption
+    st.image(st.session_state.image_data, caption="已載入圖片", width=200)
+
+# 8. 處理使用者輸入與模型互動
+if prompt := st.chat_input("請輸入文字或載入圖片後提問..."):
+    if chat:
+        user_message_to_display = {"role": "user", "content": prompt}
+        if st.session_state.image_data:
+             user_message_to_display["image"] = st.session_state.image_data
+        st.session_state.messages.append(user_message_to_display)
+        with st.chat_message("user"):
+            if st.session_state.image_data:
+                st.image(st.session_state.image_data, width=200)
+            st.markdown(prompt)
+        
+        log_message_to_db(st.session_state.session_id, "user", prompt)
+
+        model_input = [prompt]
+        if st.session_state.image_data:
+            model_input.append(st.session_state.image_data)
+        st.session_state.image_data = None 
+        
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            message_placeholder.markdown("思考中...✍️")
+            try:
+                response = chat.send_message(model_input)
+                full_response = response.text
+                message_placeholder.markdown(full_response)
+                log_message_to_db(st.session_state.session_id, "assistant", full_response)
+                if tts_enabled:
+                    text_to_speech_autoplay(full_response, selected_voice_tld)
+            except Exception as e:
+                full_response = f"發生錯誤：{e}"
+                message_placeholder.error(full_response)
+        
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
+    else:
+        st.warning("請先完成左側的設定才能開始對話。")
