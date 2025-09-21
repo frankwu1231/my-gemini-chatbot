@@ -2,13 +2,13 @@ import streamlit as st
 import google.generativeai as genai
 from gtts import gTTS
 from PIL import Image
-from streamlit_camera import camera_input # (新增) 匯入相機元件
+# 不再需要 from streamlit_camera import camera_input
 import io
 import base64
 
 # --- 1. 網頁基礎配置 ---
 st.set_page_config(
-    page_title="全能 AI 助理 (文字/語音/圖片/攝影)",
+    page_title="全能 AI 助理 (內建攝影功能)",
     page_icon="📸",
     layout="centered"
 )
@@ -59,10 +59,9 @@ selected_voice_tld = voice_options[selected_voice_name]
 
 # --- 3. 主應用程式介面 ---
 st.title("📸 全能 AI 助理")
-st.caption("支援文字、語音輸出、圖片上傳與即時攝影")
+st.caption("支援文字、語音輸出、圖片上傳與內建即時攝影")
 
 # --- 4. 初始化模型與對話 ---
-# (此區塊程式碼與前一版完全相同，此處省略以節省篇幅)
 chat = None
 if not api_key:
     st.error("⚠️ 請在左側設定您的 Google API Key。")
@@ -77,7 +76,6 @@ else:
     except Exception as e:
         st.error(f"模型或 API Key 載入失敗：{e}")
 
-
 # --- 5. 對話歷史記錄管理 ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -88,22 +86,21 @@ for message in st.session_state.messages:
             st.image(message["image"], width=200)
         st.markdown(message["content"])
 
-# --- (更新) 圖片/攝影上傳與管理 ---
+# --- 圖片/攝影上傳與管理 ---
 st.subheader("圖片/攝影輸入")
-# 將圖片和攝影機輸入放在分頁中，讓介面更整潔
 tab1, tab2 = st.tabs(["📁 檔案上傳", "📷 攝影機拍照"])
 
 with tab1:
     uploaded_image = st.file_uploader("上傳圖片檔案...", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
 
 with tab2:
-    camera_photo = camera_input(
-        "點擊下方的相機圖示拍照", 
+    # 直接使用 Streamlit 內建的 st.camera_input
+    camera_photo = st.camera_input(
+        "點擊按鈕拍照", 
         key="camera_input",
         label_visibility="collapsed"
     )
 
-# 狀態管理：優先使用相機照片，其次是上傳的檔案
 if "image_data" not in st.session_state:
     st.session_state.image_data = None
 
@@ -112,13 +109,10 @@ if camera_photo:
 elif uploaded_image:
     st.session_state.image_data = Image.open(uploaded_image)
 
-# 如果有圖片，就顯示出來
 if st.session_state.image_data:
     st.image(st.session_state.image_data, caption="已載入圖片", width=200)
 
-
 # --- 6. 處理使用者輸入與模型互動 ---
-# (此區塊程式碼與前一版完全相同)
 if prompt := st.chat_input("請輸入文字或載入圖片後提問..."):
     if chat:
         user_message_to_display = {"role": "user", "content": prompt}
@@ -135,7 +129,7 @@ if prompt := st.chat_input("請輸入文字或載入圖片後提問..."):
         if st.session_state.image_data:
             model_input.append(st.session_state.image_data)
         
-        st.session_state.image_data = None # 清空圖片，避免重複傳送
+        st.session_state.image_data = None 
         
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
