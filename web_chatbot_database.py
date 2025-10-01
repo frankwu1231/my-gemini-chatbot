@@ -1,15 +1,3 @@
-import sys
-import streamlit as st
-import google.generativeai as genai
-
-# --- 環境診斷 ---
-st.title("🔍 環境診斷資訊")
-st.write(f"**Python 直譯器路徑:**")
-st.code(sys.executable)
-st.write(f"**google-generativeai 套件版本:**")
-st.code(genai.__version__)
-st.info("請將以上資訊提供給 AI 助理進行分析。診斷完成後可移除此區塊。")
-st.stop() # 暫停執行後續程式碼
 import streamlit as st
 import google.generativeai as genai
 from gtts import gTTS
@@ -91,7 +79,7 @@ default_persona = "你是一位知識淵博、觀察力敏銳的 AI 助理。"
 st.sidebar.subheader("🎭 角色特性設定")
 persona_prompt = st.sidebar.text_area("請輸入 AI 的角色描述 (System Prompt)：", value=default_persona, height=200)
 
-model_name = st.sidebar.selectbox("選擇模型 (Vision Pro 支援圖片/攝影)", ("gemini-1.5-pro-latest", "gemini-1.5-flash-latest"))
+model_name = st.sidebar.selectbox("選擇模型 (Vision Pro 支援圖片/攝影)", ("gemini-2.5-flash", "gemini-1.5-pro"))
 
 st.sidebar.subheader("🔊 語音設定")
 tts_enabled = st.sidebar.toggle("啟用/關閉語音輸出", value=True)
