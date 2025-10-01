@@ -62,7 +62,7 @@ persona_prompt = st.sidebar.text_area(
 # 選擇要使用的模型
 model_name = st.sidebar.selectbox(
     "選擇模型",
-    ("gemini-1.5-flash-latest", "gemini-1.5-pro-latest")
+    ("gemini-2.5-flash-latest", "gemini-2.5-pro-latest")
 )
 
 
